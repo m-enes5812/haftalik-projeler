@@ -1,0 +1,6 @@
+app:
+  jwt:
+    secret: test-icin-en-az-otuz-iki-baytlik-gizli-anahtar
+  bootstrap-admin:
+    email: admin@kampus.test
+    password: Admin-Sifre-123

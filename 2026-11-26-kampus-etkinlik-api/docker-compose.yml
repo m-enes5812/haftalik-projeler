@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: kampus
+      POSTGRES_USER: kampus
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-kampus}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kampus -d kampus"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/kampus
+      DB_USER: kampus
+      DB_PASSWORD: ${DB_PASSWORD:-kampus}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET tanımlanmalı (.env.example dosyasına bakın)}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q UP"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+
+volumes:
+  db-data:

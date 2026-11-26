@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: kampus-etkinlik-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/kampus}
+    username: ${DB_USER:kampus}
+    password: ${DB_PASSWORD:kampus}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+app:
+  jwt:
+    # En az 32 bayt olmalı. Üretimde mutlaka ortam değişkeninden verin.
+    secret: ${JWT_SECRET:degistir-beni-bu-sadece-yerel-gelistirme-icin-32b}
+    ttl: ${JWT_TTL:PT2H}
+    issuer: kampus-etkinlik-api
+  bootstrap-admin:
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
