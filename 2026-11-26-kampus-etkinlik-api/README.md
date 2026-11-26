@@ -18,10 +18,13 @@ Bu API kontenjanı veritabanı seviyesinde garanti ediyor, her öğrenciye tahmi
 
 ```mermaid
 flowchart LR
-    C[İstemci / Mobil uygulama] -->|JWT| S[Spring Security<br/>OAuth2 Resource Server]
+    W[Web arayüzü<br/>static/ · vanilla JS] -->|JWT| S[Spring Security<br/>OAuth2 Resource Server]
+    C[Mobil / diğer istemciler] -->|JWT| S
     S --> AC[AuthController]
     S --> EC[EventController]
     S --> TC[TicketController]
+    S --> MC[MyEventsController]
+    MC --> ES
     AC --> US[UserService]
     EC --> ES[EventService]
     TC --> TS[TicketService]
@@ -72,6 +75,21 @@ erDiagram
 | Kulüp (`CLUB`) | Taslak etkinlik oluşturma, güncelleme, yayınlama, iptal etme; kapıda bilet okutma; kayıt/giriş istatistikleri |
 | Admin (`ADMIN`) | Kulübün yapabildiği her şey (tüm etkinlikler için) + kullanıcı rolü değiştirme |
 
+### Web arayüzü
+
+Uygulama açıldığında <http://localhost:8080> adresinde Türkçe bir web arayüzü gelir. Ek bir kurulum gerektirmez; Spring Boot `src/main/resources/static/` klasöründeki dosyaları aynı sunucudan sunar.
+
+| Ekran | Kim görür | Ne yapar |
+|---|---|---|
+| Giriş / Kayıt | Herkes | Hesap açma ve giriş |
+| Etkinlikler | Herkes | Yaklaşan etkinlikler, boş yer çubuğu, **Bilet Al** |
+| Biletlerim | Öğrenci | Biletin QR kodu, bilet iptali |
+| Etkinliklerim | Kulüp/Admin | Etkinlik oluşturma, düzenleme, yayınlama, iptal, istatistik |
+| Kapı Girişi | Kulüp/Admin | Kamerayla QR okutma (tarayıcı destekliyorsa), USB okuyucu veya elle kod girişi |
+| Kullanıcılar | Admin | Kullanıcı listesi ve rol değiştirme |
+
+Arayüz çerçevesiz, düz JavaScript ile yazıldı. Sunucudan gelen veri sayfaya yalnızca `textContent` ile yazılıyor, böylece etkinlik başlığı gibi alanlardan XSS yapılamıyor. Token `sessionStorage` içinde tutuluyor, sekme kapanınca siliniyor.
+
 ### Uç noktalar
 
 | Metot | Yol | Yetki |
@@ -79,6 +97,7 @@ erDiagram
 | POST | `/api/auth/register` | Herkes |
 | POST | `/api/auth/login` | Herkes |
 | GET | `/api/me` | Giriş yapmış |
+| GET | `/api/admin/users` | Admin |
 | PATCH | `/api/admin/users/{id}/role` | Admin |
 | GET | `/api/events` · `/api/events/{id}` | Herkes |
 | POST | `/api/events` | Kulüp/Admin |
@@ -87,6 +106,7 @@ erDiagram
 | GET | `/api/events/{id}/stats` | Etkinliğin sahibi/Admin |
 | POST | `/api/events/{id}/tickets` | Öğrenci |
 | GET | `/api/me/tickets` | Giriş yapmış |
+| GET | `/api/me/events` | Kulüp/Admin (kendi etkinlikleri, taslaklar dahil) |
 | DELETE | `/api/tickets/{id}` | Biletin sahibi |
 | GET | `/api/tickets/{id}/qr` | Biletin sahibi |
 | POST | `/api/events/{id}/check-in` | Etkinliğin sahibi/Admin |

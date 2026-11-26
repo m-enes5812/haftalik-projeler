@@ -9,6 +9,10 @@ import com.kampus.etkinlik.user.UserDtos.UserResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,6 +52,14 @@ public class AuthController {
   @Operation(summary = "Oturumdaki kullanıcı")
   public UserResponse me() {
     return UserResponse.of(service.get(currentUser.id()));
+  }
+
+  @GetMapping("/api/admin/users")
+  @PreAuthorize("hasRole('ADMIN')")
+  @Operation(summary = "Kullanıcı listesi (admin, sayfalı)")
+  public Page<UserResponse> users(
+      @PageableDefault(size = 50, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
+    return service.list(pageable).map(UserResponse::of);
   }
 
   @PatchMapping("/api/admin/users/{id}/role")

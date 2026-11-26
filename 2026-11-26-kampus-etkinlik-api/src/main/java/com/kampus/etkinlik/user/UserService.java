@@ -6,6 +6,8 @@ import com.kampus.etkinlik.user.UserDtos.LoginRequest;
 import com.kampus.etkinlik.user.UserDtos.RegisterRequest;
 import com.kampus.etkinlik.user.UserDtos.TokenResponse;
 import java.util.Locale;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -52,6 +54,11 @@ public class UserService {
     User user = users.findById(userId).orElseThrow(() -> ApiException.notFound("Kullanıcı"));
     user.setRole(role);
     return user;
+  }
+
+  @Transactional(readOnly = true)
+  public Page<User> list(Pageable pageable) {
+    return users.findAll(pageable);
   }
 
   @Transactional(readOnly = true)

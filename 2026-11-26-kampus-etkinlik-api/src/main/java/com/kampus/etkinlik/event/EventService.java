@@ -39,17 +39,27 @@ public class EventService {
   public Page<EventResponse> upcoming(Pageable pageable) {
     Page<Event> page =
         events.findByStatusAndStartsAtAfter(EventStatus.PUBLISHED, clock.instant(), pageable);
-    List<Long> ids = page.map(Event::getId).getContent();
-    // Sayfadaki tüm etkinliklerin dolulukları tek sorguda (N+1 yok).
-    Map<Long, Long> counts =
-        ids.isEmpty()
-            ? Map.of()
-            : tickets.countByEventIds(ids, LIVE).stream()
-                .collect(
-                    Collectors.toMap(
-                        TicketRepository.EventCount::getEventId,
-                        TicketRepository.EventCount::getTotal));
+    Map<Long, Long> counts = liveCounts(page.map(Event::getId).getContent());
     return page.map(e -> EventResponse.of(e, counts.getOrDefault(e.getId(), 0L)));
+  }
+
+  /** Düzenleyicinin tüm etkinlikleri (taslak ve iptal dahil), en yenisi önce. */
+  @Transactional(readOnly = true)
+  public List<EventResponse> organizedBy(long organizerId) {
+    List<Event> list = events.findByOrganizerIdOrderByStartsAtDesc(organizerId);
+    Map<Long, Long> counts = liveCounts(list.stream().map(Event::getId).toList());
+    return list.stream().map(e -> EventResponse.of(e, counts.getOrDefault(e.getId(), 0L))).toList();
+  }
+
+  /** Verilen etkinliklerin dolulukları tek sorguda (N+1 yok). */
+  private Map<Long, Long> liveCounts(List<Long> ids) {
+    return ids.isEmpty()
+        ? Map.of()
+        : tickets.countByEventIds(ids, LIVE).stream()
+            .collect(
+                Collectors.toMap(
+                    TicketRepository.EventCount::getEventId,
+                    TicketRepository.EventCount::getTotal));
   }
 
   /** Herkese açık görünüm: taslaklar sadece sahibine/admine görünür. */

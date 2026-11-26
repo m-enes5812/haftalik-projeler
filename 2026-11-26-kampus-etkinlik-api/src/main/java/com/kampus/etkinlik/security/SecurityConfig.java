@@ -35,6 +35,10 @@ public class SecurityConfig {
             auth ->
                 auth.requestMatchers("/api/auth/**", "/actuator/health/**")
                     .permitAll()
+                    // Web arayüzünün statik dosyaları.
+                    .requestMatchers(
+                        HttpMethod.GET, "/", "/index.html", "/app.js", "/style.css", "/favicon.svg")
+                    .permitAll()
                     .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/events", "/api/events/*")
